@@ -160,7 +160,6 @@ def calculate_dosage(patient):
         final_dosage = base_dosage * 2
         #FIX: Corrected to multiplication
         # BUG: Using addition instead of multiplication for loading dose
-        final_dosage = base_dosage * base_dosage
         # FIX: Corrected to multiplication
     
     # Add dosage information to the patient record
