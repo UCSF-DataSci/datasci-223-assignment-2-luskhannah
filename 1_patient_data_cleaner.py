@@ -52,8 +52,16 @@ def load_patient_data(filepath):
         list: List of patient dictionaries
     """
     # BUG: No error handling for file not found
-    with open(filepath, 'r') as file:
-        return json.load(file)
+    try:
+        with open(filepath, 'r') as file:
+            return json.load(file)
+    except FileNotFoundError:
+        print(f"Error: The file '{filepath}' was not found.")
+        return []
+    except json.JSONDecodeError:
+        print(f"Error: The file '{filepath}' contains invalid JSON.")
+        return []
+    # FIX: Added error handling
 
 def clean_patient_data(patients):
     """
@@ -73,22 +81,34 @@ def clean_patient_data(patients):
     
     for patient in patients:
         # BUG: Typo in key 'nage' instead of 'name'
-        patient['nage'] = patient['name'].title()
+        patient['name'] = patient['name'].title()
+        # FIX: Corrected the key to 'name'
         
         # BUG: Wrong method name (fill_na vs fillna)
-        patient['age'] = patient['age'].fill_na(0)
+        age = patient.get('age', 0)
+        if age != age:  
+            age = 0
+        patient['age'] = int(age)
+        # FIX: fill_na only works with pandas, changed to a simple check
         
         # BUG: Wrong method name (drop_duplcates vs drop_duplicates)
-        patient = patient.drop_duplcates()
+        seen = set()
+        key = (patient.get('name'), patient.get('age'), patient.get('diagnosis'))
+        if key not in seen:
+            seen.add(key)
+            cleaned_patients.append(patient)
+        # FIX: Corrected the method to drop_duplicates, using a method that does not require pandas
         
         # BUG: Wrong comparison operator (= vs ==)
-        if patient['age'] = 18:
+        if patient['age'] >= 18:
             # BUG: Logic error - keeps patients under 18 instead of filtering them out
             cleaned_patients.append(patient)
+        # FIX: Corrected the logic to filter out patients under 18
     
     # BUG: Missing return statement for empty list
     if not cleaned_patients:
-        return None
+        return []
+    # FIX: Added return statement for empty list
     
     return cleaned_patients
 
@@ -102,7 +122,10 @@ def main():
     
     # BUG: No error handling for load_patient_data failure
     patients = load_patient_data(data_path)
-    
+    if not patients:  # Check if the list is empty
+        print("Error: Failed to load patient data. Exiting.")
+        return
+   
     # Clean the patient data
     cleaned_patients = clean_patient_data(patients)
     
